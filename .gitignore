@@ -10,6 +10,11 @@
 # Icon must end with two \r
 Icon
 
+# Data folder
+.txt
+
+# VSCode
+.vscode
 
 # Thumbnails
 ._*
