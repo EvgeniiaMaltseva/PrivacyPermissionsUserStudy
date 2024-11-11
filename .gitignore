@@ -7,6 +7,13 @@
 .AppleDouble
 .LSOverride
 
+# Ignore the ProjectSettings folder
+/ProjectSettings/
+
+# Ignore SteamVR plugin and configuration files
+/Assets/SteamVR_Resources/
+/Assets/XR/
+
 # Icon must end with two \r
 Icon
 
