@@ -32,23 +32,35 @@ public class XRDragSticker : MonoBehaviour
         float distanceToBookSnapZone = Vector3.Distance(transform.position, bookSnapZone.position);
         float distanceToBoardSnapZone = Vector3.Distance(transform.position, boardSnapZone.position);
 
-        // Determine which snap zone is closest and within snap distance
-        if (distanceToBookSnapZone <= snapDistance && distanceToBookSnapZone <= distanceToBoardSnapZone)
+        // If neither snap zone is within snapping range, return to board zone
+        if (distanceToBookSnapZone > snapDistance && distanceToBoardSnapZone > snapDistance)
         {
-            // Snap to the book zone if closer and within distance
-            SnapToBook();
-        }
-        else if (distanceToBoardSnapZone <= snapDistance && distanceToBoardSnapZone < distanceToBookSnapZone)
-        {
-            // Snap to the board zone if closer and within distance
-            SnapToBoard();
+            ReturnToBoard();
         }
         else
         {
-            // If neither is within snapping range, unsnap from both zones
-            if (snappedToBook) UnsnapFromBook();
-            if (snappedToBoard) UnsnapFromBoard();
+            // If close enough to one of the snap zones, snap to it
+            if (distanceToBookSnapZone <= snapDistance)
+            {
+                SnapToBook();
+            }
+            else if (distanceToBoardSnapZone <= snapDistance)
+            {
+                SnapToBoard();
+            }
         }
+    }
+    private void ReturnToBoard()
+    {
+        // Directly move the sticker back to the board snap zone if it's too far from both snap zones
+        transform.position = boardSnapZone.position;
+        transform.rotation = boardSnapZone.rotation;
+
+        Debug.Log("Sticker returned to the board zone because it was too far from both snap zones.");
+
+        rb.isKinematic = true;
+        snappedToBoard = true;
+        snappedToBook = false;
     }
 
     private void SnapToBook()
