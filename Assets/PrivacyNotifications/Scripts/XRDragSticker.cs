@@ -14,10 +14,19 @@ public class XRDragSticker : MonoBehaviour
     private bool snappedToBook = false;   // Track if snapped to book
     private bool snappedToBoard = false;  // Track if snapped to board
 
+    private Vector3 originalScale;       // To store the original scale
+    private Transform originalParent;    // To store the original parent
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         grabInteractable = GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+
+        // Store original parent and scale
+        originalParent = transform.parent;
+        originalScale = transform.localScale; 
+
+        Debug.Log("Original Parent of " + gameObject.name + " is " + (originalParent != null ? originalParent.name : "None"));
 
         // Register for the sticker release and grab events
         grabInteractable.selectExited.AddListener(OnRelease);
@@ -35,7 +44,7 @@ public class XRDragSticker : MonoBehaviour
         // If neither snap zone is within snapping range, return to board zone
         if (distanceToBookSnapZone > snapDistance && distanceToBoardSnapZone > snapDistance)
         {
-            ReturnToBoard();
+            SnapToBoard();
         }
         else
         {
@@ -50,23 +59,15 @@ public class XRDragSticker : MonoBehaviour
             }
         }
     }
-    private void ReturnToBoard()
-    {
-        // Directly move the sticker back to the board snap zone if it's too far from both snap zones
-        transform.position = boardSnapZone.position;
-        transform.rotation = boardSnapZone.rotation;
-
-        Debug.Log("Sticker returned to the board zone because it was too far from both snap zones.");
-
-        rb.isKinematic = true;
-        snappedToBoard = true;
-        snappedToBook = false;
-    }
 
     private void SnapToBook()
     {
+
         transform.position = bookSnapZone.position;
         transform.rotation = bookSnapZone.rotation;
+        
+                // Set the book snap zone as the parent and reset scale
+        transform.SetParent(bookSnapZone);
 
         Debug.Log("Sticker snapped to book zone at position: " + transform.position.ToString("F3"));
 
@@ -86,8 +87,13 @@ public class XRDragSticker : MonoBehaviour
 
     private void SnapToBoard()
     {
+
         transform.position = boardSnapZone.position;
         transform.rotation = boardSnapZone.rotation;
+
+                // Reset to original parent and original scale
+        transform.SetParent(originalParent);
+        transform.localScale = originalScale;
 
         Debug.Log("Sticker snapped to board zone at position: " + transform.position.ToString("F3"));
 
