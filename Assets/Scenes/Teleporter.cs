@@ -37,28 +37,28 @@ public class Teleporter : MonoBehaviour {
     void Update() {
       Vector3[] pos = new Vector3[] {
         new Vector3(-7.698f, -3.5f, -17.471f),  // room 1 - hello
-        new Vector3(-7.698f, -3.5f, -12.471f),  // room 2 - face
-        new Vector3(-7.698f, -3.5f, -2.044f),   // room 3 - captcha - velvet
+        //new Vector3(-7.698f, -3.5f, -12.471f),  // room 2 - face
+        //new Vector3(-7.698f, -3.5f, -2.044f),   // room 3 - captcha - velvet
         new Vector3(-10.701f, 0f, -4.24f),      // room 4 - find letters - church
-        new Vector3(10.391f, 0f, -4.24f),       // room 5 - color vision - daisy
+        //new Vector3(10.391f, 0f, -4.24f),       // room 5 - color vision - daisy
         new Vector3(25.165f, 0f, -9.365f),      // room 6 - proximity - red
-        new Vector3(15.658f, 0f, -15.61f),      // room 7 - MOCA short - recluse
+        //new Vector3(15.658f, 0f, -15.61f),      // room 7 - MOCA short - recluse
         new Vector3(-25.475f, 0f, -7.88f),      // room 8 - wingspan - cave
         new Vector3(-15.587f, 0f, -17.425f),    // room 9 - fitness - motivation
         new Vector3(-21.032f, 0f, -16.16f),     // room 10 - puzzle - deafening
-        new Vector3(21.01f, 0f, -15.04f),       // room 11 - reaction time - flash
-        new Vector3(-24.65f, 3.5f, -2.198f),    // room 12 - ceiling - finally
+        //new Vector3(21.01f, 0f, -15.04f),       // room 11 - reaction time - flash
+        //new Vector3(-24.65f, 3.5f, -2.198f),    // room 12 - ceiling - finally
         new Vector3(-22.149f, 3.5f, -17.242f),  // room 13 - language - apple
-        new Vector3(-25.293f, 3.5f, -8.354f),   // room 14 - pattern - i can
+        //new Vector3(-25.293f, 3.5f, -8.354f),   // room 14 - pattern - i can
         new Vector3(-14.907f, 3.5f, -16.331f),  // room 15 - frame rate - conception
         new Vector3(-10.84f, 3.5f, -3.78f),     // room 16 - MOCA animals - lion rhino camel
         new Vector3(12.85f, 3.5f, -15.76f),     // room 17 - MOCA serial 7 - 65
         new Vector3(15.658f, 0f, -15.61f),      // room 18 - MOCA long - recluse
         new Vector3(25.16f, 3.5f, -10.541f),    // room 19 - MOCA abstraction - vehicle, measurement
         new Vector3(24.61f, 3.5f, -0.98f),      // room 20 - MOCA language
-        new Vector3(24.61f, 0f, -0.98f),        // room 21 - einstein - einstein
+        //new Vector3(24.61f, 0f, -0.98f),        // room 21 - einstein - einstein
         new Vector3(12.553f, 3.5f, -4.481f),    // room 22 - orientation
-        new Vector3(23.03f, 3.5f, -15.95f),     // room 23 - close vision - twelve
+        //new Vector3(23.03f, 3.5f, -15.95f),     // room 23 - close vision - twelve
         new Vector3(20.794f, 3.5f, -11.245f),   // room 24 - distance vision - digital playground
         new Vector3(1f, 20f, -8.75f)            // room 25 - victory
       };

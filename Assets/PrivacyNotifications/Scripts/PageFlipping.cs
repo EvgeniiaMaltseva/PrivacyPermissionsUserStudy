@@ -8,7 +8,7 @@ public class PageFlipping : MonoBehaviour
     public List<Transform> leftPages;     // List of pages on the left side of the book
     public Transform spine;               // The spine (pivot point) of the book
     public float flipSpeed = 2f;          // Speed of the page flip
-    public float maxFlipAngle = 100f;     // Maximum flip angle
+    public float maxFlipAngle = 160f;     // Maximum flip angle
 
     private bool isFlipping = false;
 
@@ -49,7 +49,7 @@ public class PageFlipping : MonoBehaviour
     private IEnumerator FlipPageRoutine(Transform page, bool rightToLeft)
     {
         isFlipping = true;
-        
+
         float angle = 0;
         float targetAngle = Mathf.Min(180f, maxFlipAngle);  // Limit to the maxFlipAngle
         Vector3 localYAxis = spine.up;  // Using the spine's local Y-axis

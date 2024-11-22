@@ -17,6 +17,11 @@ public class XRDragSticker : MonoBehaviour
     private Vector3 originalScale;       // To store the original scale
     private Transform originalParent;    // To store the original parent
 
+    private MeshRenderer bookSnapZoneRenderer;  // Renderer for book snap zone
+
+    public SnapZoneManager snapZoneManager;     // Reference to the manager
+
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -31,6 +36,12 @@ public class XRDragSticker : MonoBehaviour
         // Register for the sticker release and grab events
         grabInteractable.selectExited.AddListener(OnRelease);
         grabInteractable.selectEntered.AddListener(OnGrab);
+
+        // Get the MeshRenderer component of the book snap zone
+        if (bookSnapZone != null)
+        {
+            bookSnapZoneRenderer = bookSnapZone.GetComponent<MeshRenderer>();
+        }
     }
 
     private void OnRelease(SelectExitEventArgs args)
@@ -66,14 +77,23 @@ public class XRDragSticker : MonoBehaviour
         transform.position = bookSnapZone.position;
         transform.rotation = bookSnapZone.rotation;
         
-                // Set the book snap zone as the parent and reset scale
+        // Set the book snap zone as the parent and reset scale
         transform.SetParent(bookSnapZone);
+
+        // Hide the book snap zone renderer
+        if (bookSnapZoneRenderer != null)
+        {
+            bookSnapZoneRenderer.enabled = false;
+        }
 
         Debug.Log("Sticker snapped to book zone at position: " + transform.position.ToString("F3"));
 
         rb.isKinematic = true;
         snappedToBook = true;
         snappedToBoard = false;
+
+        // Notify snap zone manager
+        snapZoneManager.UpdateSnapZoneStatus(bookSnapZone, true);
     }
 
     private void UnsnapFromBook()
@@ -82,7 +102,16 @@ public class XRDragSticker : MonoBehaviour
         rb.isKinematic = false;
         snappedToBook = false;
 
+        // Show the book snap zone renderer
+        if (bookSnapZoneRenderer != null)
+        {
+            bookSnapZoneRenderer.enabled = true;
+        }
+
         Debug.Log("Sticker unsnapped from the book zone.");
+
+        // Notify snap zone manager
+        snapZoneManager.UpdateSnapZoneStatus(bookSnapZone, false);
     }
 
     private void SnapToBoard()
@@ -91,9 +120,15 @@ public class XRDragSticker : MonoBehaviour
         transform.position = boardSnapZone.position;
         transform.rotation = boardSnapZone.rotation;
 
-                // Reset to original parent and original scale
+        // Reset to original parent and original scale
         transform.SetParent(originalParent);
         transform.localScale = originalScale;
+
+        // Show the book snap zone renderer in case it was hidden
+        if (bookSnapZoneRenderer != null)
+        {
+            bookSnapZoneRenderer.enabled = true;
+        }
 
         Debug.Log("Sticker snapped to board zone at position: " + transform.position.ToString("F3"));
 

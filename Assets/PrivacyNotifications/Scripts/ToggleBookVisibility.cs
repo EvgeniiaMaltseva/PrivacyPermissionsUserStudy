@@ -8,6 +8,9 @@ public class ToggleBookVisibility : MonoBehaviour
     public Button checkMarkButton;         // The check mark button inside the book UI
     public Button iconButton;              // The button component on the book icon
 
+    public UIFollowPlayer uiFollowPlayer; // Reference to the UIFollowPlayer script
+
+
     private void Start()
     {
         // Ensure references are set up correctly
@@ -60,5 +63,7 @@ public class ToggleBookVisibility : MonoBehaviour
         bookUI.SetActive(true);
         bookIcon.SetActive(false);
         Debug.Log("Book UI displayed and icon hidden.");
+        // Trigger the UI to start following the player
+        uiFollowPlayer.StartFollowingPlayer();
     }
 }
