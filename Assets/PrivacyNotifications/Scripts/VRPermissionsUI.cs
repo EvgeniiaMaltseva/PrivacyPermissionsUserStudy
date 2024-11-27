@@ -4,44 +4,48 @@ using UnityEngine.UI;
 
 public class VRPermissionsUI : MonoBehaviour
 {
-    // Slider references for each option
     public Slider acceptAllSlider;
     public Slider bodyTrackingSlider;
-    public Slider videoRecordingSlider;
+    public Slider personalDataSlider;
     public Slider eyeTrackingSlider;
     public Slider locationSlider;
     public Slider voiceRecordingSlider;
-
-    // Confirm button and the UI panel
+    public Slider cognitivePerfomanceSlider;
     public Button confirmButton;
     public GameObject uiPanel;
 
-    // List to hold all sliders except "Accept All" for easy management
     private List<Slider> allSliders;
-    
+
     // Flag to prevent recursive updates
     private bool isUpdating = false;
 
     void Start()
     {
-        // Initialize the list with all individual sliders
-        allSliders = new List<Slider> { bodyTrackingSlider, videoRecordingSlider, eyeTrackingSlider, locationSlider, voiceRecordingSlider };
+        allSliders = new List<Slider> { bodyTrackingSlider, personalDataSlider, eyeTrackingSlider, locationSlider, voiceRecordingSlider, cognitivePerfomanceSlider };
 
-        // Subscribe to slider and button events
         acceptAllSlider.onValueChanged.AddListener(OnAcceptAllSlid);
         confirmButton.onClick.AddListener(OnConfirmClicked);
 
         // Add listeners for each individual slider to detect manual changes
         foreach (var slider in allSliders)
         {
-            slider.onValueChanged.AddListener(OnIndividualSliderChanged);
+            slider.onValueChanged.AddListener(value => SnapSlider(slider));
         }
     }
 
-    // Called when "Accept All" slider is changed
+    private void SnapSlider(Slider slider)
+    {
+        if (isUpdating) return; 
+
+        isUpdating = true;
+        slider.value = slider.value >= 0.5f ? 1 : 0; // Snap to 1 (right) if >= 0.5, otherwise to 0 (left)
+        isUpdating = false;
+
+        UpdateAcceptAllSlider();
+    }
     private void OnAcceptAllSlid(float value)
     {
-        if (isUpdating) return;  // Ignore if we're in the middle of a programmatic update
+        if (isUpdating) return;
 
         bool isOn = value >= 0.5f; // Treat slider values >= 0.5 as "on"
 
@@ -54,11 +58,9 @@ public class VRPermissionsUI : MonoBehaviour
         isUpdating = false;
     }
 
-    // Called when any individual slider is changed
-    private void OnIndividualSliderChanged(float value)
+    // Update "Accept All" slider based on the state of individual sliders
+    private void UpdateAcceptAllSlider()
     {
-        if (isUpdating) return; // Ignore if we're in the middle of a programmatic update
-
         // Check if all sliders are at max (1)
         bool allAreOn = true;
         foreach (var slider in allSliders)
@@ -70,18 +72,13 @@ public class VRPermissionsUI : MonoBehaviour
             }
         }
 
-        // If not all sliders are on, turn off the "Accept All" slider
-        if (!allAreOn)
-        {
-            isUpdating = true; // Prevent recursive triggering
-            acceptAllSlider.value = 0;
-            isUpdating = false;
-        }
+        // Update "Accept All" slider
+        isUpdating = true; // Prevent recursive triggering
+        acceptAllSlider.value = allAreOn ? 1 : 0;
+        isUpdating = false;
     }
-
-    // Called when the "Confirm" button is clicked
     private void OnConfirmClicked()
     {
-        uiPanel.SetActive(false); // Hides the UI panel
+        uiPanel.SetActive(false);
     }
 }

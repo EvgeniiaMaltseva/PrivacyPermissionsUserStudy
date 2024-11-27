@@ -5,7 +5,7 @@ public class ToggleBookVisibility : MonoBehaviour
 {
     public GameObject bookUI;              // The book UI element to show/hide
     public GameObject bookIcon;            // The icon to show when the book UI is hidden
-    public Button checkMarkButton;         // The check mark button inside the book UI
+    public Button confirmButton;         // The confirm button inside the book UI
     public Button iconButton;              // The button component on the book icon
 
     public UIFollowPlayer uiFollowPlayer; // Reference to the UIFollowPlayer script
@@ -24,14 +24,14 @@ public class ToggleBookVisibility : MonoBehaviour
             Debug.LogError("Book Icon is not assigned in the inspector.");
         }
 
-        if (checkMarkButton == null)
+        if (confirmButton == null)
         {
-            Debug.LogError("Check Mark Button is not assigned in the inspector.");
+            Debug.LogError("Confirm Button is not assigned in the inspector.");
         }
         else
         {
             // Add a listener for the check mark button click event
-            checkMarkButton.onClick.AddListener(OnCheckMarkClicked);
+            confirmButton.onClick.AddListener(OnConfirmButtonClicked);
         }
 
         if (iconButton == null)
@@ -49,7 +49,7 @@ public class ToggleBookVisibility : MonoBehaviour
         bookUI.SetActive(true);
     }
 
-    public void OnCheckMarkClicked()
+    public void OnConfirmButtonClicked()
     {
         // Hide the book UI and show the icon
         bookUI.SetActive(false);

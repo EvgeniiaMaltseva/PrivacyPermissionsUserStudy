@@ -7,29 +7,30 @@ public class XRDragSticker : MonoBehaviour
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
 
     // Snap settings
-    public Transform bookSnapZone;        // Reference to the book snap zone
-    public Transform boardSnapZone;       // Reference to the board snap zone
-    public float snapDistance = 0.2f;     // Maximum distance for snapping
+    public Transform bookSnapZone;        
+    public Transform boardSnapZone;       
+    public float snapDistance = 0.2f;     
+    private bool snappedToBook = false;   
+    private bool snappedToBoard = false; 
 
-    private bool snappedToBook = false;   // Track if snapped to book
-    private bool snappedToBoard = false;  // Track if snapped to board
+    private Vector3 originalScale;     
+    private Transform originalParent;   
 
-    private Vector3 originalScale;       // To store the original scale
-    private Transform originalParent;    // To store the original parent
+    private MeshRenderer bookSnapZoneRenderer; 
+    public SnapZoneManager snapZoneManager;     
 
-    private MeshRenderer bookSnapZoneRenderer;  // Renderer for book snap zone
-
-    public SnapZoneManager snapZoneManager;     // Reference to the manager
-
+    private PermissionManager permissionManager;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         grabInteractable = GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+        permissionManager = FindObjectOfType<PermissionManager>();
+
 
         // Store original parent and scale
         originalParent = transform.parent;
-        originalScale = transform.localScale; 
+        originalScale = transform.localScale;
 
         Debug.Log("Original Parent of " + gameObject.name + " is " + (originalParent != null ? originalParent.name : "None"));
 
@@ -59,11 +60,24 @@ public class XRDragSticker : MonoBehaviour
         }
         else
         {
-            // If close enough to one of the snap zones, snap to it
+            // If close enough to one of the snap zones, attempt to snap to it
             if (distanceToBookSnapZone <= snapDistance)
             {
-                SnapToBook();
+                if (snapZoneManager.IsSnapZoneOccupied(bookSnapZone))
+                {
+                    Debug.Log("Book snap zone is already occupied.");
+                    SnapToBoard(); // Return the sticker to the board
+                }
+                else
+                {
+                    SnapToBook();
+                }
             }
+            // If close enough to one of the snap zones, snap to it
+            // if (distanceToBookSnapZone <= snapDistance)
+            // {
+            //     SnapToBook();
+            // }
             else if (distanceToBoardSnapZone <= snapDistance)
             {
                 SnapToBoard();
@@ -76,7 +90,7 @@ public class XRDragSticker : MonoBehaviour
 
         transform.position = bookSnapZone.position;
         transform.rotation = bookSnapZone.rotation;
-        
+
         // Set the book snap zone as the parent and reset scale
         transform.SetParent(bookSnapZone);
 
@@ -94,6 +108,25 @@ public class XRDragSticker : MonoBehaviour
 
         // Notify snap zone manager
         snapZoneManager.UpdateSnapZoneStatus(bookSnapZone, true);
+
+        // Update permission manager dynamically based on sticker type
+        UpdatePermissionBasedOnSticker();
+
+    }
+
+    private void UpdatePermissionBasedOnSticker()
+    {
+        string stickerName = gameObject.name;
+        if (stickerName.Contains("_"))
+        {
+            var parts = stickerName.Split('_');
+            if (parts.Length == 2)
+            {
+                bool isAllowed = parts[0] == "Green";
+                string permission = parts[1];
+                permissionManager.UpdatePermission(permission, isAllowed);
+            }
+        }
     }
 
     private void UnsnapFromBook()
