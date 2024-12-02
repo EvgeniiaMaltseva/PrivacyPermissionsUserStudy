@@ -59,7 +59,7 @@ public class VRGazeTimeTracker : MonoBehaviour
 
                 currentGazedObject = hitObject;
                 totalGazeTime += Time.deltaTime;  // Accumulate total gaze time
-                Debug.Log($"Gazing at {hitObject.name}. Total Gaze Time: {totalGazeTime:F2} seconds");
+                //Debug.Log($"Gazing at {hitObject.name}. Total Gaze Time: {totalGazeTime:F2} seconds");
             }
             else
             {
@@ -109,16 +109,32 @@ public class VRGazeTimeTracker : MonoBehaviour
         return false;
     }
 
+    public void ToggleTracking(bool isActive)
+    {
+        // Toggle tracking when the user interacts with the book UI
+        isTracking = isActive;
+
+        if (isTracking)
+        {
+            Debug.Log("Gaze tracking resumed.");
+        }
+        else
+        {
+            Debug.Log("Gaze tracking paused.");
+        }
+    }
     private void OnConfirmButtonClicked()
     {
         // Stop tracking when confirm is pressed
-        isTracking = false;
+        //isTracking = false;
 
-        Debug.Log($"Confirm clicked. Total Gaze Time: {totalGazeTime:F2} seconds");
+        //Debug.Log($"Confirm clicked. Total Gaze Time: {totalGazeTime:F2} seconds");
         SaveTotalGazeTimeToFile(totalGazeTime);
+        Debug.Log($"Confirm clicked. Total Gaze Time so far: {totalGazeTime:F2} seconds");
 
-        Debug.Log("Gaze tracking stopped.");
+        //Debug.Log("Gaze tracking stopped.");
     }
+
 
     private void SaveTotalGazeTimeToFile(float totalGazeTime)
     {

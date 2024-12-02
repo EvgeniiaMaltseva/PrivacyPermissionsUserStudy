@@ -32,6 +32,10 @@ public class Teleporter : MonoBehaviour
   public AudioClip line2;
 
   private PermissionManager permissionManager;
+  private Vector3[] pos;
+
+  public float roomRange = 5f; // Range to determine if the user is in a room
+
 
   void Start()
   {
@@ -47,7 +51,7 @@ public class Teleporter : MonoBehaviour
 
   void Update()
   {
-    Vector3[] pos = new Vector3[] {
+    pos = new Vector3[] {
         new Vector3(-7.698f, -3.5f, -17.471f),  // room 1 - hello
         //new Vector3(-7.698f, -3.5f, -12.471f),  // room 2 - face
         //new Vector3(-7.698f, -3.5f, -2.044f),   // room 3 - captcha - velvet
@@ -63,11 +67,11 @@ public class Teleporter : MonoBehaviour
         new Vector3(-22.149f, 3.5f, -17.242f),  // room 13 - language - apple <---------(book-ui)
         //new Vector3(-25.293f, 3.5f, -8.354f),   // room 14 - pattern - i can
         //new Vector3(-14.907f, 3.5f, -16.331f),  // room 15 - frame rate - conception
-        new Vector3(-10.84f, 3.5f, -3.78f),     // room 16 - MOCA animals - lion rhino camel <---------(book-ui)
-        //new Vector3(12.85f, 3.5f, -15.76f),     // room 17 - MOCA serial 7 - 65 <---------(standard-ui)
+        //new Vector3(-10.84f, 3.5f, -3.78f),     // room 16 - MOCA animals - lion rhino camel <---------(standard-ui)
+        new Vector3(12.85f, 3.5f, -15.76f),     // room 17 - MOCA serial 7 - 65 <---------(book-ui) 
         //new Vector3(15.658f, 0f, -15.61f),      // room 18 - MOCA long - recluse
         //new Vector3(25.16f, 3.5f, -10.541f),    // room 19 - MOCA abstraction - vehicle, measurement <---------(standard-ui)
-        new Vector3(24.61f, 3.5f, -0.98f),      // room 20 - MOCA language <---------(book-ui)
+        new Vector3(24.61f, 3.5f, -1.98f),      // room 20 - MOCA language <---------(book-ui)
         //new Vector3(24.61f, 0f, -0.98f),        // room 21 - einstein - einstein
         //new Vector3(12.553f, 3.5f, -4.481f),    // room 22 - orientation
         new Vector3(23.03f, 3.5f, -15.95f),     // room 23 - close vision - twelve <---------(book-ui)
@@ -75,46 +79,12 @@ public class Teleporter : MonoBehaviour
         new Vector3(1f, 20f, -8.75f)            // room 25 - victory
       };
 
-    // // Permissions required for each room
-    // Dictionary<Vector3, string> roomPermissions = new Dictionary<Vector3, string>
-    // {
-    //     { pos[0], "" },              // room 1 - no permission required
-    //     { pos[1], "Body" },     // room 4 - requires TrackData
-    //     { pos[2], "Camera" },   // room 9 - requires FitnessData
-    //     { pos[3], "Eye" },// room 13 - requires LanguageAccess
-    //     { pos[4], "Location" },    // room 16 - requires AnimalData
-    //     { pos[5], "Voice" },// room 20 - requires LanguageAccess
-    //     { pos[6], "Eye" },  // room 23 - requires VisionAccess
-    //     { pos[7], "" }               // room 25 - no permission required
-    // };
-
     if (Input.GetKeyDown("space"))
     {
-
-      if (index < pos.Length)
-      {
-        Vector3 nextPosition = pos[index];
-        //string requiredPermission = roomPermissions[nextPosition];
-
-        //if (string.IsNullOrEmpty(requiredPermission) || permissionManager.HasPermission(requiredPermission))
-        //{
-        this.transform.position = nextPosition;
-        bs.PlayOneShot(win, 1f);
-        index++;
-        // Check for permission for the new room
-        if (permissionManager != null)
-        {
-          permissionManager.CheckRoomPermission(this.transform.position);
-        }
-      }
-      else
-      {
-        Debug.Log("No more rooms to teleport to.");
-      }
+      MoveToNextRoom();
     }
     // this.transform.position = pos[index++];
     // bs.PlayOneShot(win, 1f);
-
 
     if (Input.GetKeyDown("b"))
     {
@@ -187,5 +157,55 @@ public class Teleporter : MonoBehaviour
       if (m == 9) m9.SetActive(false);
       if (m == 10) m10.SetActive(false);
     }
+  }
+
+
+  public void MoveToNextRoom()
+  {
+    if (index < pos.Length)
+    {
+      Vector3 nextPosition = pos[index];
+      this.transform.position = nextPosition;
+      bs.PlayOneShot(win, 1f);
+      index++;
+
+      // Check for permission for the new room
+      if (permissionManager != null)
+      {
+        permissionManager.CheckRoomPermission(this.transform.position);
+      }
+    }
+    else
+    {
+      Debug.Log("No more rooms to teleport to.");
+    }
+  }
+  public bool CanSkipToNextRoom()
+  {
+    return index < pos.Length;
+  }
+
+  public Vector3 GetNextPosition()
+  {
+    if (index < pos.Length)
+    {
+      return pos[index];
+    }
+    return pos[pos.Length - 1]; // Return last position if no more rooms
+  }
+
+  public Vector3 GetCurrentRoomPosition()
+  {
+    foreach (var roomPosition in pos)
+    {
+      if (Vector3.Distance(this.transform.position, roomPosition) <= roomRange)
+      {
+        Debug.Log($"Current room detected at position: {roomPosition}");
+        return roomPosition;
+      }
+    }
+
+    Debug.LogWarning("Player is not in any room range.");
+    return Vector3.zero; // Default value if no room matches
   }
 }

@@ -8,6 +8,7 @@ public class SnapZoneManager : MonoBehaviour
     public Button confirmButton;         // Reference to the confirm button
 
     private Dictionary<Transform, bool> snapZoneStatuses = new Dictionary<Transform, bool>(); // Tracks occupied zones
+    private Dictionary<Transform, GameObject> snapZoneOccupyingStickers = new Dictionary<Transform, GameObject>();
 
     private void Start()
     {
@@ -23,20 +24,39 @@ public class SnapZoneManager : MonoBehaviour
         }
     }
 
-    public void UpdateSnapZoneStatus(Transform snapZone, bool isOccupied)
+    public void UpdateSnapZoneStatus(Transform snapZone, bool isOccupied, GameObject occupyingSticker = null)
     {
         if (snapZoneStatuses.ContainsKey(snapZone))
         {
             snapZoneStatuses[snapZone] = isOccupied;
+
+            if (isOccupied)
+            {
+                snapZoneOccupyingStickers[snapZone] = occupyingSticker;
+            }
+            else
+            {
+                snapZoneOccupyingStickers[snapZone] = null;
+            }
         }
         else
         {
             Debug.LogWarning($"SnapZone {snapZone.name} is not registered in SnapZoneManager!");
-            return;
         }
 
         // Check if all snap zones are occupied
         CheckAllZonesOccupied();
+    }
+
+    public GameObject GetOccupyingSticker(Transform snapZone)
+    {
+        if (snapZoneOccupyingStickers.TryGetValue(snapZone, out GameObject occupyingSticker))
+        {
+            return occupyingSticker;
+        }
+
+        Debug.LogWarning($"SnapZone {snapZone.name} does not have a tracked occupying sticker!");
+        return null;
     }
 
     public bool IsSnapZoneOccupied(Transform snapZone)

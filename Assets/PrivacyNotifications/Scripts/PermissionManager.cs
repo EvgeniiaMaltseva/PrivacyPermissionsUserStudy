@@ -5,112 +5,191 @@ using UnityEngine.UI;
 
 public class PermissionManager : MonoBehaviour
 {
-    public TMPro.TextMeshProUGUI notificationText;
+    [Header("Sticker Settings")]
+    public GameObject stickerDisplay; // Empty GameObject to hold the sticker
+    public List<StickerMaterialPair> stickerMaterialPairs; // Configurable via Inspector
+
+    [Header("UI Settings")]
+    public GameObject notificationPanel; // Notification UI Panel
+    public Button skipButton; // Skip Room button
+    public Button settingsButton; // Open Settings button
+    public TMPro.TextMeshProUGUI notificationText; // Text to display permission info
+
+    [Header("Room Settings")]
+    public float roomRange = 5f; // Range for detecting rooms
+    public Dictionary<Vector3, string> roomRequirements = new Dictionary<Vector3, string>(); // Room permissions
+
+    private Dictionary<string, Material> stickerMaterials = new Dictionary<string, Material>();
     private Dictionary<string, bool> permissions = new Dictionary<string, bool>();
-    private Dictionary<Vector3, string> roomRequirements = new Dictionary<Vector3, string>(); // Room-to-permission mapping
-    private Coroutine hideNotificationCoroutine;
+    private Teleporter teleporter;
+
+    private ToggleBookVisibility toggleBookVisibility;
+    // New: List of skipped rooms
+    private HashSet<Vector3> skippedRooms = new HashSet<Vector3>();
 
     void Start()
     {
+        toggleBookVisibility = FindObjectOfType<ToggleBookVisibility>();
+        teleporter = FindObjectOfType<Teleporter>();
+        if (teleporter == null)
+        {
+            Debug.LogError("Teleporter not found in the scene!");
+        }
+
+        // Populate the sticker materials dictionary
+        foreach (var pair in stickerMaterialPairs)
+        {
+            stickerMaterials[pair.stickerName] = pair.stickerMaterial;
+        }
+
         // Initialize permissions
         permissions["Eye Tracking"] = false;
         permissions["Body Tracking"] = false;
         permissions["Personal Data"] = false;
-        permissions["Cognitive Perfomance"] = false;
+        permissions["Cognitive Performance"] = false;
         permissions["Voice Recording"] = false;
         permissions["Location"] = false;
 
-        if (notificationText != null)
-        {
-            ClearNotification();
-        }
+        // Configure rooms with their required permissions
+        roomRequirements[new Vector3(-10.701f, 0f, -4.24f)] = "Eye Tracking";
+        roomRequirements[new Vector3(-15.587f, 0f, -17.425f)] = "Body Tracking";
+        roomRequirements[new Vector3(-22.149f, 3.5f, -17.242f)] = "Personal Data";
+        roomRequirements[new Vector3(12.85f, 3.5f, -15.76f)] = "Cognitive Performance";
+        roomRequirements[new Vector3(24.61f, 3.5f, -1.98f)] = "Voice Recording";
+        roomRequirements[new Vector3(23.03f, 3.5f, -15.95f)] = "Location";
 
-        // Set up room-to-permission mappings
-        roomRequirements[new Vector3(-10.701f, 0f, -4.24f)] = "Eye Tracking"; // Room-4 find letters
-        roomRequirements[new Vector3(-15.587f, 0f, -17.425f)] = "Body Tracking"; // Room-9 fitness
-        roomRequirements[new Vector3(-22.149f, 3.5f, -17.242f)] = "Personal Data"; // Room-13 language
-        roomRequirements[new Vector3(-10.84f, 3.5f, -3.78f)] = "Cognitive Perfomance"; // Room-16 naming animals
-        roomRequirements[new Vector3(24.61f, 3.5f, -0.98f)] = "Voice Recording"; // Room-20 repeat after robot
-        roomRequirements[new Vector3(23.03f, 3.5f, -15.95f)] = "Location"; // Room-23 location
+        // Assign button listeners
+        skipButton.onClick.AddListener(SkipRoom);
+        settingsButton.onClick.AddListener(OpenSettings);
+
+        // Hide notification at the start
+        notificationPanel.SetActive(false);
+
+        // Ensure the sticker display is initially cleared
+        ClearSticker();
     }
 
-    // Update permission status based on the sticker placed
+    public void CheckRoomPermission(Vector3 userPosition)
+    {
+        // Clear previous state at the start of the check
+        ClearSticker();
+        notificationPanel.SetActive(false);
+
+        foreach (var room in roomRequirements)
+        {
+            float distance = Vector3.Distance(userPosition, room.Key);
+            if (distance <= roomRange) // If within range of the room
+            {
+                //Skip notification if room was already skipped
+                if (skippedRooms.Contains(room.Key))
+                {
+                    Debug.Log($"Room at {room.Key} was previously skipped. No notification.");
+                    return; // Exit immediately to avoid further processing
+                }
+
+                string requiredPermission = room.Value;
+                Debug.Log($"Checking room at {room.Key}. Required permission: {requiredPermission}");
+
+                if (permissions.TryGetValue(requiredPermission, out bool isAllowed))
+                {
+                    if (!isAllowed)
+                    {
+                        // Show notification
+                        notificationText.text = $"This room requires {requiredPermission}";
+                        notificationPanel.SetActive(true);
+                        toggleBookVisibility.bookUI.SetActive(false);
+                        toggleBookVisibility.bookIcon.SetActive(false);
+
+                        Debug.Log($"Permission {requiredPermission} is required but not granted.");
+
+                        // Show red sticker
+                        DisplaySticker($"Red_{requiredPermission}");
+                        return;
+                    }
+                    else
+                    {
+                        Debug.Log($"Permission {requiredPermission} is granted.");
+
+                        // Show green sticker
+                        DisplaySticker($"Green_{requiredPermission}");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Permission {requiredPermission} is not defined.");
+                }
+                return;
+            }
+        }
+
+        // Clear sticker if not in any room range
+        Debug.Log("No room in range. Clearing stickers.");
+        ClearSticker();
+    }
+
+    public void DisplaySticker(string stickerName)
+    {
+        if (stickerMaterials.TryGetValue(stickerName, out Material material))
+        {
+            MeshRenderer renderer = stickerDisplay.GetComponent<MeshRenderer>();
+            if (renderer != null)
+            {
+                renderer.material = material;
+                stickerDisplay.SetActive(true);
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Sticker {stickerName} not found.");
+        }
+    }
+
+    public void ClearSticker()
+    {
+        stickerDisplay.SetActive(false);
+        MeshRenderer renderer = stickerDisplay.GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            renderer.material = null;
+        }
+    }
+
     public void UpdatePermission(string permission, bool isAllowed)
     {
         if (permissions.ContainsKey(permission))
         {
             permissions[permission] = isAllowed;
             Debug.Log($"Permission {permission} updated to {isAllowed}");
-            // Check if the notification is about the missing permission
-            if (notificationText != null && notificationText.text.Contains($"Permission '{permission}' is required"))
-            {
-                ClearNotification();
-            }
         }
     }
 
-    // Check permissions when entering a room
-    public void CheckRoomPermission(Vector3 roomPosition)
-    {
-        if (roomRequirements.TryGetValue(roomPosition, out string requiredPermission))
+    public void SkipRoom()
+    { 
+        toggleBookVisibility.bookIcon.SetActive(true);
+
+        if (teleporter != null && teleporter.CanSkipToNextRoom())
         {
-            if (permissions.TryGetValue(requiredPermission, out bool isAllowed))
-            {
-                if (!isAllowed)
-                {
-                    // Notify user about the required permission if not allowed
-                    NotifyUser($"Permission '{requiredPermission}' is required to proceed in this room", Color.red, 0.06f);
-                }
-                else
-                {
-                    // Notify user that data recording has started
-                    NotifyUser($"Data recording for '{requiredPermission}' has started", Color.green, 0.05f);
-                    // Hide the notification after 5 seconds
-                    if (hideNotificationCoroutine != null)
-                    {
-                        StopCoroutine(hideNotificationCoroutine);
-                    }
-                    hideNotificationCoroutine = StartCoroutine(HideNotificationAfterDelay(5f));
-                }
-            }
-            else
-            {
-                Debug.LogError($"Permission {requiredPermission} is not defined.");
-            }
+            // New: Mark the current room as skipped
+            Vector3 currentRoomPosition = teleporter.GetCurrentRoomPosition();
+            skippedRooms.Add(currentRoomPosition);
+            Debug.Log($"Room at {currentRoomPosition} marked as skipped.");
+
+            Vector3 nextRoomPosition = teleporter.GetNextPosition();
+            teleporter.MoveToNextRoom();
+            CheckRoomPermission(nextRoomPosition);
+
+            Debug.Log($"Skipped to the next room at position {nextRoomPosition}");
         }
         else
         {
-            Debug.Log($"Room at position {roomPosition} does not require any specific permission.");
+            Debug.Log("No more rooms to skip to.");
         }
     }
 
-    // Display a notification to the user
-    private void NotifyUser(string message, Color color, float fontSize)
+    void OpenSettings()
     {
-        if (notificationText != null)
-        {
-            notificationText.text = message;
-            notificationText.color = color;       
-            notificationText.fontSize = fontSize;   
-        }
-
-        Debug.Log(message);
-    }
-
-    // Coroutine to hide the notification after a delay
-    private IEnumerator HideNotificationAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        ClearNotification();
-    }
-
-    public void ClearNotification()
-    {
-        if (notificationText != null)
-        {
-            notificationText.text = "";
-        }
-
-        Debug.Log("Notification cleared.");
+        // Open book or settings UI for sticker change
+        Debug.Log("Opening book for sticker selection...");
+        notificationPanel.SetActive(false);
     }
 }
