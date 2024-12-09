@@ -108,6 +108,8 @@ public class PermissionManager : MonoBehaviour
                     }
                     else
                     {
+                        toggleBookVisibility.bookUI.SetActive(false);
+                        toggleBookVisibility.bookIcon.SetActive(true);
                         Debug.Log($"Permission {requiredPermission} is granted.");
 
                         // Show green sticker

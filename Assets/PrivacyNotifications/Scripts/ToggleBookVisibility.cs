@@ -12,8 +12,11 @@ public class ToggleBookVisibility : MonoBehaviour
 
     public VRGazeTimeTracker gazeTracker;  // Reference to the VRGazeTimeTracker script
 
+    private PermissionManager permissionManager;
+
     private void Start()
     {
+        permissionManager = FindObjectOfType<PermissionManager>();
         // Ensure references are set up correctly
         if (bookUI == null)
         {
@@ -60,6 +63,7 @@ public class ToggleBookVisibility : MonoBehaviour
         // Hide the book UI and show the icon
         bookUI.SetActive(false);
         bookIcon.SetActive(true);
+        permissionManager.CheckRoomPermission(this.transform.position);
         //Debug.Log("Book UI hidden and icon displayed.");
         // Pause gaze tracking
         if (gazeTracker != null)
@@ -75,6 +79,7 @@ public class ToggleBookVisibility : MonoBehaviour
         // Show the book UI and hide the icon
         bookUI.SetActive(true);
         bookIcon.SetActive(false);
+        permissionManager.stickerDisplay.SetActive(false);
 
         // Resume gaze tracking
         if (gazeTracker != null)
