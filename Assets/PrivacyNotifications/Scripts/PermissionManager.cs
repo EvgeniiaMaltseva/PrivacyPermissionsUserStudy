@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class PermissionManager : MonoBehaviour
 {
     [Header("Sticker Settings")]
-    public GameObject stickerDisplay; // Empty GameObject to hold the sticker
+    public List<GameObject> stickerDisplays; // Static sticker displays in each room
     public List<StickerMaterialPair> stickerMaterialPairs; // Configurable via Inspector
 
     [Header("UI Settings")]
@@ -24,8 +24,14 @@ public class PermissionManager : MonoBehaviour
     private Teleporter teleporter;
 
     private ToggleBookVisibility toggleBookVisibility;
+
+    // Tracks the currently active sticker display
+    public GameObject currentStickerDisplay;
+
     // New: List of skipped rooms
     private HashSet<Vector3> skippedRooms = new HashSet<Vector3>();
+
+    public VRGazeTimeTracker gazeTracker;  // Reference to the VRGazeTimeTracker script
 
     void Start()
     {
@@ -65,22 +71,22 @@ public class PermissionManager : MonoBehaviour
         // Hide notification at the start
         notificationPanel.SetActive(false);
 
-        // Ensure the sticker display is initially cleared
-        ClearSticker();
+        // Ensure all sticker displays are initially cleared
+        ClearAllStickers();
     }
 
     public void CheckRoomPermission(Vector3 userPosition)
     {
-        // Clear previous state at the start of the check
-        ClearSticker();
+        ClearAllStickers(); // Reset all displays at the start
         notificationPanel.SetActive(false);
+        currentStickerDisplay = null;
 
         foreach (var room in roomRequirements)
         {
             float distance = Vector3.Distance(userPosition, room.Key);
             if (distance <= roomRange) // If within range of the room
             {
-                //Skip notification if room was already skipped
+                // Skip notification if room was already skipped
                 if (skippedRooms.Contains(room.Key))
                 {
                     Debug.Log($"Room at {room.Key} was previously skipped. No notification.");
@@ -99,21 +105,21 @@ public class PermissionManager : MonoBehaviour
                         notificationPanel.SetActive(true);
                         toggleBookVisibility.bookUI.SetActive(false);
                         toggleBookVisibility.bookIcon.SetActive(false);
+                        toggleBookVisibility.gazeTracker.ToggleTracking(false);
+                        gazeTracker.SaveTotalGazeTimeToFile();
 
                         Debug.Log($"Permission {requiredPermission} is required but not granted.");
 
                         // Show red sticker
-                        DisplaySticker($"Red_{requiredPermission}");
+                        ActivateStickerDisplay(room.Key, $"Red_{requiredPermission}");
                         return;
                     }
                     else
                     {
-                        toggleBookVisibility.bookUI.SetActive(false);
-                        toggleBookVisibility.bookIcon.SetActive(true);
                         Debug.Log($"Permission {requiredPermission} is granted.");
 
                         // Show green sticker
-                        DisplaySticker($"Green_{requiredPermission}");
+                        ActivateStickerDisplay(room.Key, $"Green_{requiredPermission}");
                     }
                 }
                 else
@@ -124,36 +130,56 @@ public class PermissionManager : MonoBehaviour
             }
         }
 
-        // Clear sticker if not in any room range
+        // Clear stickers if not in any room range
         Debug.Log("No room in range. Clearing stickers.");
-        ClearSticker();
+        ClearAllStickers();
     }
 
-    public void DisplaySticker(string stickerName)
+    private void ActivateStickerDisplay(Vector3 roomPosition, string stickerName)
     {
-        if (stickerMaterials.TryGetValue(stickerName, out Material material))
+        // Find the nearest sticker display to the room position
+        float minDistance = float.MaxValue;
+
+        foreach (var sticker in stickerDisplays)
         {
-            MeshRenderer renderer = stickerDisplay.GetComponent<MeshRenderer>();
-            if (renderer != null)
+            float distance = Vector3.Distance(sticker.transform.position, roomPosition);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                currentStickerDisplay = sticker;
+            }
+        }
+
+        if (currentStickerDisplay != null)
+        {
+            MeshRenderer renderer = currentStickerDisplay.GetComponent<MeshRenderer>();
+            if (stickerMaterials.TryGetValue(stickerName, out Material material))
             {
                 renderer.material = material;
-                stickerDisplay.SetActive(true);
+                currentStickerDisplay.SetActive(true);
             }
         }
         else
         {
-            Debug.LogWarning($"Sticker {stickerName} not found.");
+            Debug.LogWarning("No suitable sticker display found for this room.");
         }
     }
 
-    public void ClearSticker()
+    public void ClearAllStickers()
     {
-        stickerDisplay.SetActive(false);
-        MeshRenderer renderer = stickerDisplay.GetComponent<MeshRenderer>();
-        if (renderer != null)
+        foreach (var sticker in stickerDisplays)
         {
-            renderer.material = null;
+            if (sticker != null)
+            {
+                sticker.SetActive(false);
+                MeshRenderer renderer = sticker.GetComponent<MeshRenderer>();
+                if (renderer != null)
+                {
+                    renderer.material = null;
+                }
+            }
         }
+        currentStickerDisplay = null;
     }
 
     public void UpdatePermission(string permission, bool isAllowed)
@@ -166,12 +192,12 @@ public class PermissionManager : MonoBehaviour
     }
 
     public void SkipRoom()
-    { 
+    {
         toggleBookVisibility.bookIcon.SetActive(true);
 
         if (teleporter != null && teleporter.CanSkipToNextRoom())
         {
-            // New: Mark the current room as skipped
+            // Mark the current room as skipped
             Vector3 currentRoomPosition = teleporter.GetCurrentRoomPosition();
             skippedRooms.Add(currentRoomPosition);
             Debug.Log($"Room at {currentRoomPosition} marked as skipped.");

@@ -79,7 +79,7 @@ public class ToggleBookVisibility : MonoBehaviour
         // Show the book UI and hide the icon
         bookUI.SetActive(true);
         bookIcon.SetActive(false);
-        permissionManager.stickerDisplay.SetActive(false);
+        permissionManager.currentStickerDisplay.SetActive(false);
 
         // Resume gaze tracking
         if (gazeTracker != null)

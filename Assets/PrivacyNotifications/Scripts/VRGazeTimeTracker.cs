@@ -134,9 +134,13 @@ public class VRGazeTimeTracker : MonoBehaviour
 
         //Debug.Log("Gaze tracking stopped.");
     }
+    // Method with no arguments - uses the internal totalGazeTime variable
+    public void SaveTotalGazeTimeToFile()
+    {
+        SaveTotalGazeTimeToFile(totalGazeTime); // Call the existing method
+    }
 
-
-    private void SaveTotalGazeTimeToFile(float totalGazeTime)
+    public void SaveTotalGazeTimeToFile(float totalGazeTime)
     {
         // Format the data to append
         string data = $"Total Gaze Time: {totalGazeTime:F2} seconds, Date: {System.DateTime.Now}\n";
