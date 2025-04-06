@@ -51,6 +51,8 @@ By default, the project is set to use the VR simulator in the scene. To run it w
 
 Additionally, there are two scripts that track the time the user spends interacting within the interface, and the data is collected based on the user's head movements. The collected data is stored in the following location: Assets/PrivacyNotifications/Data/.
 
+It is also recommended to have Blender software installed to view the book UI.
+
 ### Controls
 The following keyboard controls are available (intended for use by the researcher conducting the experiment):
 
