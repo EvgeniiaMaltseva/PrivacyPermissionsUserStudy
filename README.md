@@ -14,6 +14,8 @@ The repository is a Unity project built for Unity Editor version 2021.3.1f1.
 
 ## Note
 
+Implementation located at Assets/PrivacyNotifications
+
 By default, the project is set to use the VR simulator in the scene. To run it with your HMD, follow these steps:
 
 1. Go to **Edit** -> **Project Settings** -> **XR Plug-in Management**.
